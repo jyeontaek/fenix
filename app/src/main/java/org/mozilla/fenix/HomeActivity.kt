@@ -195,6 +195,15 @@ open class HomeActivity : AppCompatActivity() {
     }
 
     private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
+        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER_AND_LOAD) == true) {
+            this.intent.putExtra(OPEN_TO_BROWSER_AND_LOAD, false)
+            openToBrowserAndLoad(intent.getStringExtra(IntentReceiverActivity.SPEECH_PROCESSING), true, BrowserDirection.FromGlobal, forceSearch = true)
+            return
+        } else if (intent?.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
+            this.intent.putExtra(OPEN_TO_SEARCH, false)
+            addEmptyTab()
+            return
+        }
         Log.d("pendingIntent", "handleOpenedFromExternalSourceIfNecessary 1")
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) return
         Log.d("pendingIntent", "handleOpenedFromExternalSourceIfNecessary 2")
@@ -206,14 +215,7 @@ open class HomeActivity : AppCompatActivity() {
             customTabSessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
         }
 
-        if (intent.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
-            Log.d("pendingIntent", intent.toString())
-            Log.d("pendingIntent", intent.extras?.toString())
-            this.intent.putExtra(OPEN_TO_SEARCH, false)
-            addEmptyTab()
-        } else {
-            openToBrowser(BrowserDirection.FromGlobal, customTabSessionId)
-        }
+        openToBrowser(BrowserDirection.FromGlobal, customTabSessionId)
     }
 
     @Suppress("LongParameterList")
@@ -315,7 +317,7 @@ open class HomeActivity : AppCompatActivity() {
     private fun addEmptyTab() {
         //components.useCases.tabsUseCases.addTab
         //    .invoke(url = "", startLoading = false)
-        navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null))
+        navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null, true))
     }
 
     private val singleSessionObserver = object : Session.Observer {
@@ -395,6 +397,7 @@ open class HomeActivity : AppCompatActivity() {
 
     companion object {
         const val OPEN_TO_BROWSER = "open_to_browser"
+        const val OPEN_TO_BROWSER_AND_LOAD = "open_to_browser_and_load"
         const val OPEN_TO_SEARCH = "open_to_search"
     }
 }

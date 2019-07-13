@@ -11,6 +11,7 @@ import android.graphics.Typeface.BOLD
 import android.graphics.Typeface.ITALIC
 import android.os.Bundle
 import android.text.style.StyleSpan
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
@@ -53,7 +54,7 @@ import org.mozilla.fenix.search.awesomebar.AwesomeBarUIView
 import org.mozilla.fenix.search.awesomebar.AwesomeBarViewModel
 
 @Suppress("TooManyFunctions")
-class SearchFragment : Fragment(), BackHandler {
+open class SearchFragment : Fragment(), BackHandler {
     private lateinit var toolbarComponent: ToolbarComponent
     private lateinit var awesomeBarComponent: AwesomeBarComponent
     private var sessionId: String? = null
@@ -63,7 +64,7 @@ class SearchFragment : Fragment(), BackHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-// Disabled while awaiting a better solution to #3209
+// D isabled while awaiting a better solution to #3209
 //        postponeEnterTransition()
 //        sharedElementEnterTransition =
 //            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
@@ -79,6 +80,7 @@ class SearchFragment : Fragment(), BackHandler {
         savedInstanceState: Bundle?
     ): View? {
         sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
+        val isLaunchedFromWidget = SearchFragmentArgs.fromBundle(arguments!!).isLaunchedFromWidget
         isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
 
         val session = sessionId?.let { requireComponents.core.sessionManager.findSessionById(it) }
@@ -111,7 +113,7 @@ class SearchFragment : Fragment(), BackHandler {
                 this,
                 AwesomeBarViewModel::class.java
             ) {
-                AwesomeBarViewModel(AwesomeBarState("", false))
+                AwesomeBarViewModel(AwesomeBarState("", isLaunchedFromWidget))
             }
         )
         ActionBusFactory.get(this).logMergedObservables()

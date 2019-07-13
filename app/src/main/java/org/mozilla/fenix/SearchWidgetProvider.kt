@@ -14,15 +14,13 @@ class SearchWidgetProvider : AppWidgetProvider() {
         appWidgetIds.forEach { appWidgetId ->
             val pendingIntent: PendingIntent = Intent(context, IntentReceiverActivity::class.java)
                 .let { intent ->
-                    intent.action = Intent.ACTION_VIEW
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     intent.putExtra(HomeActivity.OPEN_TO_SEARCH, true)
                     PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
                 }
 
             val pendingIntent2: PendingIntent = Intent(context, IntentReceiverActivity::class.java)
                 .let { intent ->
-                    intent.action = Intent.ACTION_VIEW
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     intent.putExtra(IntentReceiverActivity.SPEECH_PROCESSING, true)
                     PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT)

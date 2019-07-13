@@ -6,11 +6,14 @@ package org.mozilla.fenix
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.util.Log
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.utils.SafeIntent
+import org.jetbrains.anko.backgroundColor
+import org.jetbrains.anko.contentView
 import org.mozilla.fenix.components.NotificationManager.Companion.RECEIVE_TABS_TAG
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
@@ -25,7 +28,10 @@ class IntentReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.search_widget)
+        previousIntent = savedInstanceState?.get(PREVIOUS_INTENT) as Intent?
+        if (previousIntent?.getBooleanExtra(SPEECH_PROCESSING, false) == true) {
+            return
+        }
 
         // The intent property is nullable, but the rest of the code below
         // assumes it is not. If it's null, then we make a new one and open
@@ -58,10 +64,7 @@ class IntentReceiverActivity : Activity() {
             }
         }
 
-        //val openToSearch = intent.getBooleanExtra(HomeActivity.OPEN_TO_SEARCH, false)
-
         intent.putExtra(HomeActivity.OPEN_TO_BROWSER, openToBrowser)
-        //intent.putExtra(HomeActivity.OPEN_TO_SEARCH, openToSearch)
 
         if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {
             Log.d("pendingIntent", "Entered speech recognizer")
@@ -71,6 +74,11 @@ class IntentReceiverActivity : Activity() {
             startActivity(intent)
             finish()
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelable(PREVIOUS_INTENT, previousIntent)
     }
 
     override fun onPause() {
@@ -110,6 +118,8 @@ class IntentReceiverActivity : Activity() {
                         results[0]
                     }
             Log.d("pendingIntent", spokenText)
+            previousIntent?.putExtra(SPEECH_PROCESSING, spokenText)
+            previousIntent?.putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
         } else {
             finish()
         }
@@ -123,6 +133,6 @@ class IntentReceiverActivity : Activity() {
 
     companion object {
         const val SPEECH_PROCESSING = "speech_processing"
-        const val INTENT_PASS = "intent_pass"
+        const val PREVIOUS_INTENT ="previous_intent"
     }
 }
