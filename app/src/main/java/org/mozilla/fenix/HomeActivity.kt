@@ -189,7 +189,8 @@ open class HomeActivity : AppCompatActivity() {
     private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER_AND_LOAD) == true) {
             this.intent.putExtra(OPEN_TO_BROWSER_AND_LOAD, false)
-            openToBrowserAndLoad(intent.getStringExtra(IntentReceiverActivity.SPEECH_PROCESSING), true, BrowserDirection.FromGlobal, forceSearch = true)
+            openToBrowserAndLoad(intent.getStringExtra(
+                IntentReceiverActivity.SPEECH_PROCESSING), true, BrowserDirection.FromGlobal, forceSearch = true)
             return
         } else if (intent?.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
             this.intent.putExtra(OPEN_TO_SEARCH, false)
