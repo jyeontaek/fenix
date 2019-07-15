@@ -7,9 +7,7 @@ package org.mozilla.fenix
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.speech.RecognizerIntent
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
@@ -74,7 +72,6 @@ open class HomeActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d("pendingIntent", "HomeActivity create")
 
         components.publicSuffixList.prefetch()
         setupThemeAndBrowsingMode()
@@ -98,8 +95,6 @@ open class HomeActivity : AppCompatActivity() {
                 }
             }
             ?.also { components.analytics.metrics.track(Event.OpenedApp(it)) }
-        if (intent.getStringExtra("DEBUG") != null)
-            Log.d("pendingIntent", intent.getStringExtra("DEBUG"))
 
         handleOpenedFromExternalSourceIfNecessary(intent)
     }
@@ -131,20 +126,17 @@ open class HomeActivity : AppCompatActivity() {
     override fun onDestroy() {
         sessionObserver?.let { components.core.sessionManager.unregister(it) }
         navHost.navController.removeOnDestinationChangedListener(onDestinationChangedListener)
-        Log.d("pendingIntent", "HomeActivity destroy")
         super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        Log.d("pendingIntent", "onNewIntent")
         handleCrashIfNecessary(intent)
         handleOpenedFromExternalSourceIfNecessary(intent)
     }
 
     override fun onResume() {
         super.onResume()
-        Log.d("pendingIntent", "HomeActivity onResume()")
         lifecycleScope.launch {
             with(components.backgroundServices) {
                 // Make sure accountManager is initialized.
@@ -201,12 +193,11 @@ open class HomeActivity : AppCompatActivity() {
             return
         } else if (intent?.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
             this.intent.putExtra(OPEN_TO_SEARCH, false)
-            addEmptyTab()
+            navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null, true))
             return
         }
-        Log.d("pendingIntent", "handleOpenedFromExternalSourceIfNecessary 1")
+
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) != true) return
-        Log.d("pendingIntent", "handleOpenedFromExternalSourceIfNecessary 2")
 
         this.intent.putExtra(OPEN_TO_BROWSER, false)
         var customTabSessionId: String? = null
@@ -312,12 +303,6 @@ open class HomeActivity : AppCompatActivity() {
         } else {
             searchUseCase.invoke(searchTermOrURL)
         }
-    }
-
-    private fun addEmptyTab() {
-        //components.useCases.tabsUseCases.addTab
-        //    .invoke(url = "", startLoading = false)
-        navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null, true))
     }
 
     private val singleSessionObserver = object : Session.Observer {

@@ -6,23 +6,19 @@ package org.mozilla.fenix
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.speech.RecognizerIntent
-import android.util.Log
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.support.utils.SafeIntent
-import org.jetbrains.anko.backgroundColor
-import org.jetbrains.anko.contentView
 import org.mozilla.fenix.components.NotificationManager.Companion.RECEIVE_TABS_TAG
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 
-private const val SPEECH_REQUEST_CODE = 0
-
 class IntentReceiverActivity : Activity() {
 
+    // Holds the intent that initially started this activity
+    // so that it can persist through the speech activity.
     private var previousIntent : Intent? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,7 +63,6 @@ class IntentReceiverActivity : Activity() {
         intent.putExtra(HomeActivity.OPEN_TO_BROWSER, openToBrowser)
 
         if (intent.getBooleanExtra(SPEECH_PROCESSING, false)) {
-            Log.d("pendingIntent", "Entered speech recognizer")
             previousIntent = intent
             displaySpeechRecognizer()
         } else {
@@ -81,58 +76,36 @@ class IntentReceiverActivity : Activity() {
         outState.putParcelable(PREVIOUS_INTENT, previousIntent)
     }
 
-    override fun onPause() {
-        Log.d("pendingIntent", "onPause")
-
-        super.onPause()
-    }
-
-    override fun onResume() {
-        Log.d("pendingIntent", "onResume")
-
-        super.onResume()
-    }
-
-    override fun onDestroy() {
-        Log.d("pendingIntent", "onDestroy")
-        super.onDestroy()
-    }
-
     private fun displaySpeechRecognizer() {
         val intentSpeech = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
         }
 
-        Log.d("pendingIntent", "Entered speech recognizer 2")
         startActivityForResult(intentSpeech, SPEECH_REQUEST_CODE)
-        Log.d("pendingIntent", "Entered speech recognizer 4")
-
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        Log.d("pendingIntent", "Entered speech recognizer 3")
+        super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == SPEECH_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+        if (requestCode == SPEECH_REQUEST_CODE && resultCode == RESULT_OK) {
             val spokenText: String? =
-                    data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let { results ->
-                        results[0]
-                    }
-            Log.d("pendingIntent", spokenText)
-            previousIntent?.putExtra(SPEECH_PROCESSING, spokenText)
-            previousIntent?.putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
-        } else {
-            finish()
+                data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let { results ->
+                    results[0]
+                }
+
+            previousIntent?.let {
+                it.putExtra(SPEECH_PROCESSING, spokenText)
+                it.putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
+                startActivity(it)
+            }
         }
 
-        startActivity(previousIntent)
-        Log.d("pendingIntent", "did not crash")
-        super.onActivityResult(requestCode, resultCode, data)
         finish()
-
     }
 
     companion object {
+        private const val SPEECH_REQUEST_CODE = 0
         const val SPEECH_PROCESSING = "speech_processing"
-        const val PREVIOUS_INTENT ="previous_intent"
+        const val PREVIOUS_INTENT = "previous_intent"
     }
 }
