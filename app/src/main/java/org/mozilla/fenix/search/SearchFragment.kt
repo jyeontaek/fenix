@@ -61,6 +61,8 @@ open class SearchFragment : Fragment(), BackHandler {
     private var isPrivate = false
     private val qrFeature = ViewBoundFeatureWrapper<QrFeature>()
     private var permissionDidUpdate = false
+    private var startedTyping = false
+    private var initialStartedTyping = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +73,9 @@ open class SearchFragment : Fragment(), BackHandler {
 //                SHARED_TRANSITION_MS
 //            )
 
+        savedInstanceState?.let {
+            startedTyping = it.getBoolean(STARTED_TYPING, true)
+        }
         requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
     }
 
@@ -81,6 +86,7 @@ open class SearchFragment : Fragment(), BackHandler {
     ): View? {
         sessionId = SearchFragmentArgs.fromBundle(arguments!!).sessionId
         val isLaunchedFromWidget = SearchFragmentArgs.fromBundle(arguments!!).isLaunchedFromWidget
+        startedTyping = !isLaunchedFromWidget
         isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
 
         val session = sessionId?.let { requireComponents.core.sessionManager.findSessionById(it) }
@@ -193,6 +199,8 @@ open class SearchFragment : Fragment(), BackHandler {
             } else {
                 requireComponents.analytics.metrics.track(Event.SearchShortcutMenuOpened)
             }
+
+            startedTyping = true
         }
 
         startPostponedEnterTransition()
@@ -213,6 +221,11 @@ open class SearchFragment : Fragment(), BackHandler {
     override fun onPause() {
         super.onPause()
         getManagedEmitter<SearchChange>().onNext(SearchChange.ToolbarClearedFocus)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STARTED_TYPING, startedTyping)
     }
 
     override fun onBackPressed(): Boolean {
@@ -254,6 +267,12 @@ open class SearchFragment : Fragment(), BackHandler {
                     is SearchAction.TextChanged -> {
                         getManagedEmitter<SearchChange>().onNext(SearchChange.QueryTextChanged(it.query))
                         getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange.UpdateQuery(it.query))
+                        if (initialStartedTyping && !startedTyping) {
+                            startedTyping = true
+                            getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange.SearchShortcutEnginePicker(false))
+                            requireComponents.analytics.metrics.track(Event.SearchShortcutMenuClosed)
+                        }
+                        initialStartedTyping = true
                     }
                     is SearchAction.EditingCanceled -> {
                         Navigation.findNavController(toolbar_wrapper).navigateUp()
@@ -335,5 +354,6 @@ open class SearchFragment : Fragment(), BackHandler {
     companion object {
         private const val SHARED_TRANSITION_MS = 150L
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
+        private const val STARTED_TYPING = "started_typing"
     }
 }
