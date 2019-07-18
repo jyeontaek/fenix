@@ -12,7 +12,7 @@
                 android:id="@+id/button_search_widget_new_tab"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@mipmap/ic_launcher"
+                android:background="@drawable/ic_logo_widget"
                 android:layout_alignParentLeft="true"
                 android:layout_marginTop="9dp"
                 android:layout_marginLeft="9dp"
@@ -33,7 +33,7 @@
                 android:id="@+id/button_search_widget_voice"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_microphone"
+                android:background="@drawable/ic_microphone_widget"
                 android:layout_alignParentRight="true"
                 android:layout_alignTop="@id/button_search_widget_new_tab"
                 android:layout_marginRight="9dp"/>
